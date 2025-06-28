@@ -109,24 +109,20 @@ document.getElementById("exportBtn").addEventListener("click", () => {
 });
 
 // === Import Quotes from JSON File ===
-document.getElementById("importFile").addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = function (e) {
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function (event) {
     try {
-      const importedQuotes = JSON.parse(e.target.result);
+      const importedQuotes = JSON.parse(event.target.result);
 
       if (
         Array.isArray(importedQuotes) &&
         importedQuotes.every((q) => q.text && q.category)
       ) {
-        quotes = importedQuotes;
-        localStorage.setItem("quotes", JSON.stringify(quotes));
-        showRandomQuote();
+        quotes.push(...importedQuotes);
+        saveQuotes();
         alert("Quotes imported successfully!");
+        showRandomQuote(); // optionally display one
       } else {
         alert("Invalid JSON format.");
       }
@@ -134,6 +130,10 @@ document.getElementById("importFile").addEventListener("change", (event) => {
       alert("Failed to parse JSON file.");
     }
   };
+  fileReader.readAsText(event.target.files[0]);
+}
 
-  reader.readAsText(file);
-});
+// Bind the import function to the input file element
+document
+  .getElementById("importFile")
+  .addEventListener("change", importFromJsonFile);
