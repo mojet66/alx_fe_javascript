@@ -1,35 +1,59 @@
-// Array to store quote objects
-const quotes = [
-  {
-    text: "The only limit to our realization of tomorrow is our doubts of today.",
-    category: "Motivation",
-  },
-  {
-    text: "In the middle of difficulty lies opportunity.",
-    category: "Inspiration",
-  },
-  {
-    text: "Life is 10% what happens to us and 90% how we react to it.",
-    category: "Life",
-  },
-];
+// === Load quotes from localStorage or use default ===
+let quotes = [];
 
-// Function to display a random quote
+const savedQuotes = localStorage.getItem("quotes");
+if (savedQuotes) {
+  quotes = JSON.parse(savedQuotes);
+} else {
+  quotes = [
+    {
+      text: "The only limit to our realization of tomorrow is our doubts of today.",
+      category: "Motivation",
+    },
+    {
+      text: "Life is what happens when you're busy making other plans.",
+      category: "Life",
+    },
+    {
+      text: "Imagination is more important than knowledge.",
+      category: "Inspiration",
+    },
+  ];
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+}
+
+// === Display a random quote ===
 function showRandomQuote() {
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const quote = quotes[randomIndex];
 
-  // Find or create a container to show the quote
-  let quoteDisplay = document.getElementById("quoteDisplay");
+  const quoteDisplay = document.getElementById("quoteDisplay");
   quoteDisplay.innerHTML = `
-    <blockquote>"${quote.text}"</blockquote>
-    <p><em>Category: ${quote.category}</em></p>
+    <p><strong>Quote:</strong> ${quote.text}</p>
+    <p><strong>Category:</strong> ${quote.category}</p>
   `;
+
+  // Save to sessionStorage
+  sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
 }
+
+// === Show last viewed quote from sessionStorage on page load ===
+window.addEventListener("DOMContentLoaded", () => {
+  const lastViewed = sessionStorage.getItem("lastViewedQuote");
+  if (lastViewed) {
+    const quote = JSON.parse(lastViewed);
+    const quoteDisplay = document.getElementById("quoteDisplay");
+    quoteDisplay.innerHTML = `
+      <p><strong>Quote:</strong> ${quote.text}</p>
+      <p><strong>Category:</strong> ${quote.category}</p>
+    `;
+  }
+});
+
+// === Show Random Quote Button Event ===
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-// Function to add a new quote from input field
-
+// === Add a New Quote via Form ===
 function addQuote() {
   const quoteInput = document.getElementById("newQuoteText");
   const categoryInput = document.getElementById("newQuoteCategory");
@@ -49,14 +73,67 @@ function addQuote() {
 
   quotes.push(newQuote);
 
+  // Save updated quotes to localStorage
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+
+  // Clear input fields
   quoteInput.value = "";
   categoryInput.value = "";
 
+  // Show the new quote immediately
   const quoteDisplay = document.getElementById("quoteDisplay");
   quoteDisplay.innerHTML = `
     <p><strong>Quote:</strong> ${newQuote.text}</p>
     <p><strong>Category:</strong> ${newQuote.category}</p>
   `;
 
+  // Save to sessionStorage
+  sessionStorage.setItem("lastViewedQuote", JSON.stringify(newQuote));
+
   alert("New quote added!");
 }
+
+// === Export Quotes to JSON File ===
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const json = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// === Import Quotes from JSON File ===
+document.getElementById("importFile").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    try {
+      const importedQuotes = JSON.parse(e.target.result);
+
+      if (
+        Array.isArray(importedQuotes) &&
+        importedQuotes.every((q) => q.text && q.category)
+      ) {
+        quotes = importedQuotes;
+        localStorage.setItem("quotes", JSON.stringify(quotes));
+        showRandomQuote();
+        alert("Quotes imported successfully!");
+      } else {
+        alert("Invalid JSON format.");
+      }
+    } catch (error) {
+      alert("Failed to parse JSON file.");
+    }
+  };
+
+  reader.readAsText(file);
+});
