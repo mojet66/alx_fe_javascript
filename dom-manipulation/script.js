@@ -386,7 +386,7 @@ function resolveConflict(index, choice) {
 }
 
 // === Fetch from Server with Conflict Detection ===
-function fetchServerQuotes() {
+function fetchQuotesFromSever() {
   fetch("https://jsonplaceholder.typicode.com/posts?_limit=5")
     .then((res) => res.json())
     .then((data) => {
@@ -437,9 +437,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   populateCategories();
   filterQuotes(); // Ensure initial display is filtered
-  fetchServerQuotes(); // Initial sync
+  fetchQuotesFromSever(); // Initial sync
 });
 
 // === Periodic Server Sync (every 30 seconds) ===
-setInterval(fetchServerQuotes, 30000);
+setInterval(fetchQuotesFromSever, 30000);
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
